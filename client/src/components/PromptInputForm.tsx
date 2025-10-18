@@ -55,10 +55,10 @@ export function PromptInputForm({
 
   const generateMutation = useMutation({
     mutationFn: async (data: GeneratePromptRequest) => {
-      const response = await apiRequest("POST", "/api/generate-prompt", data);
+      const response: any = await apiRequest("POST", "/api/generate-prompt", data);
       return response;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: any, variables) => {
       onPromptGenerated(data.prompt, variables);
       toast({
         title: "Prompt Generated!",
