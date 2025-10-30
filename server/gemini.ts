@@ -1,13 +1,31 @@
-import { GoogleGenAI } from "@google/genai";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+// import { type AIMode } from "@shared/schema";
+
+// // DON'T DELETE THIS COMMENT
+// // Follow these instructions when using this blueprint:
+// // - Note that the newest Gemini model series is "gemini-2.5-flash" or gemini-2.5-pro"
+// //   - do not change this unless explicitly requested by the user
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { type AIMode } from "@shared/schema";
+
+/// To Run powershell -ExecutionPolicy Bypass -Command "npm run dev" 
 
 // DON'T DELETE THIS COMMENT
 // Follow these instructions when using this blueprint:
 // - Note that the newest Gemini model series is "gemini-2.5-flash" or gemini-2.5-pro"
 //   - do not change this unless explicitly requested by the user
 
-// This API key is from Gemini Developer API Key, not vertex AI API Key
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+// Get API key from environment variables or use fallback
+const API_KEY = process.env.GEMINI_API_KEY || "AIzaSyB6qD_Dex8eCelFnd54Dsi93jRsuDd3mN4";
+
+if (!API_KEY || API_KEY === "undefined") {
+  throw new Error("GEMINI_API_KEY is not set in environment variables");
+}
+
+console.log("Using Gemini API key:", API_KEY.substring(0, 10) + "...");
+
+const ai = new GoogleGenerativeAI(API_KEY);
 
 interface PromptEnhancementRequest {
   mode: AIMode;
@@ -102,23 +120,26 @@ Rules:
 Generate an optimized prompt for ${mode.toUpperCase()}:`;
 
   try {
-    const response = await ai.models.generateContent({
+    // Get the model instance
+    const model = ai.getGenerativeModel({ 
       model: "gemini-2.5-flash",
-      config: {
-        systemInstruction: systemPrompt,
+      systemInstruction: systemPrompt,
+      generationConfig: {
         temperature: 0.7,
         topP: 0.95,
-      },
-      contents: userPrompt,
+      }
     });
 
-    const enhancedPrompt = response.text?.trim();
+    // Generate content with the correct method
+    const result = await model.generateContent(userPrompt);
+    const response = await result.response;
+    const responseText = response.text().trim();
     
-    if (!enhancedPrompt) {
+    if (!responseText) {
       throw new Error("Empty response from Gemini");
     }
 
-    return enhancedPrompt;
+    return responseText;
   } catch (error: any) {
     console.error("Gemini API error:", error);
     

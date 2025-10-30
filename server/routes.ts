@@ -27,27 +27,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate enhanced prompt using Gemini
-      const enhancedPrompt = await enhancePrompt(request);
+      try {
+        const enhancedPrompt = await enhancePrompt(request);
 
-      const response: GeneratePromptResponse = {
-        prompt: enhancedPrompt,
-        mode: request.mode,
-      };
+        const response: GeneratePromptResponse = {
+          prompt: enhancedPrompt,
+          mode: request.mode,
+        };
 
-      res.json(response);
-    } catch (error) {
-      console.error("Error generating prompt:", error);
-      
-      // Check if it's an API key error
-      const errorMessage = error instanceof Error ? error.message : "Failed to generate prompt";
-      if (errorMessage === "INVALID_API_KEY") {
-        return res.status(503).json({
-          error: "Invalid Gemini API key. Please provide a valid GEMINI_API_KEY in your environment settings.",
+        res.json(response);
+      } catch (error) {
+        console.error("Error generating prompt:", error);
+        
+        // Check if it's an API key error
+        const errorMessage = error instanceof Error ? error.message : "Failed to generate prompt";
+        if (errorMessage === "INVALID_API_KEY") {
+          return res.status(503).json({
+            error: "Invalid Gemini API key. Please provide a valid GEMINI_API_KEY in your environment settings.",
+          });
+        }
+        
+        res.status(500).json({
+          error: errorMessage,
         });
       }
-      
+    } catch (error) {
+      console.error("Unexpected error:", error);
       res.status(500).json({
-        error: errorMessage,
+        error: "An unexpected error occurred",
       });
     }
   });
